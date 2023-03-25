@@ -31,6 +31,15 @@ describe('Crowdfunding', async function () {
     });
 
     describe('Should revert when there is an error trying to fund the project', async function () {
+      it('Should revert when owner tries to send funds to their own project', async function () {
+        // Parse ether units to wei
+        const amount = ethers.utils.parseUnits('0', 'ether');
+        // Inverstor send 1 ETH
+        await expect(crowdfunding.fundProject({ value: amount })).to.be.revertedWith(
+          'You can not fund your own project'
+        );
+      });
+
       it('Should revert when sending 0 ether', async function () {
         // Parse ether units to wei
         const amount = ethers.utils.parseUnits('0', 'ether');

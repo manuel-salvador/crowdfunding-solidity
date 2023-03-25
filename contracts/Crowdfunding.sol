@@ -23,7 +23,23 @@ contract Crowdfunding {
         projectOwner = payable(msg.sender);
     }
 
-    function fundProject() public payable {
+    modifier onlyOwner() {
+        require(
+            msg.sender == projectOwner,
+            "You need to be the owner of the project"
+        );
+        _;
+    }
+
+    modifier notOwner() {
+        require(
+            msg.sender != projectOwner,
+            "You can not fund your own project"
+        );
+        _;
+    }
+
+    function fundProject() public payable notOwner {
         require(isActive, "The project is no longer funded");
         require(msg.value > 0, "You have to send something");
         require(totalFunded < goal, "Goal already achieved!");
@@ -34,11 +50,7 @@ contract Crowdfunding {
         totalFunded += msg.value;
     }
 
-    function changeProjectState(bool _newState) public {
-        require(
-            msg.sender == projectOwner,
-            "You need to be the owner of the project"
-        );
+    function changeProjectState(bool _newState) public onlyOwner {
         isActive = _newState;
     }
 
