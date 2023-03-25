@@ -26,7 +26,7 @@ describe('Crowdfunding', async function () {
       // Get total funded
       const totalFunded = await crowdfunding.totalFunded();
 
-      // Verify that final balance matches expected balance
+      // Verify that totalFunded matches with amount sended
       expect(totalFunded).to.equal(amount);
     });
 
@@ -34,7 +34,7 @@ describe('Crowdfunding', async function () {
       it('Should revert when owner tries to send funds to their own project', async function () {
         // Parse ether units to wei
         const amount = ethers.utils.parseUnits('0', 'ether');
-        // Inverstor send 1 ETH
+        // Owner send 1 ETH
         await expect(crowdfunding.fundProject({ value: amount })).to.be.revertedWith(
           'You can not fund your own project'
         );
@@ -52,10 +52,9 @@ describe('Crowdfunding', async function () {
       it('Should revert when the goal has already been achieved', async function () {
         // Parse ether units to wei
         const amount = ethers.utils.parseUnits('2', 'ether');
-
+        // Inverstor send 2 ETH
         crowdfunding.connect(investor).fundProject({ value: amount });
-
-        // Inverstor send 1 ETH
+        // Inverstor send 2 ETH again
         await expect(
           crowdfunding.connect(investor).fundProject({ value: amount })
         ).to.be.revertedWith('Goal already achieved!');
@@ -64,7 +63,7 @@ describe('Crowdfunding', async function () {
       it('Should revert when excess ether is sent', async function () {
         // Parse ether units to wei
         const amount = ethers.utils.parseUnits('3', 'ether');
-        // Inverstor send 1 ETH
+        // Inverstor send 3 ETH
         await expect(
           crowdfunding.connect(investor).fundProject({ value: amount })
         ).to.be.revertedWith('Amount exceeded, please check viewRemaining');
