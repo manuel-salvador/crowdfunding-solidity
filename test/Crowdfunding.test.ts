@@ -30,6 +30,15 @@ describe('Crowdfunding', async function () {
       expect(totalFunded).to.equal(amount);
     });
 
+    it('Fund project function Event', async function () {
+      // Parse ether units to wei
+      const amount = ethers.utils.parseUnits('1', 'ether');
+      // Inverstor send 1 ETH
+      await expect(crowdfunding.connect(investor).fundProject({ value: amount }))
+        .to.emit(crowdfunding, 'ProjectFunded')
+        .withArgs(investor.address, amount);
+    });
+
     describe('Should revert when there is an error trying to fund the project', async function () {
       it('Should revert when owner tries to send funds to their own project', async function () {
         // Parse ether units to wei
@@ -72,18 +81,24 @@ describe('Crowdfunding', async function () {
   });
 
   describe('Change project state', async function () {
-    it('Should set state to inactive', async function () {
-      await crowdfunding.changeProjectState(false);
+    it('Should set state to closed', async function () {
+      await crowdfunding.changeProjectState('closed');
 
-      const projectState = await crowdfunding.isActive();
+      const projectState = await crowdfunding.state();
 
-      expect(projectState).to.equal(false);
+      expect(projectState).to.equal('closed');
     });
 
     it('Should revert because the sender is not the project wallet', async function () {
-      await expect(crowdfunding.connect(investor).changeProjectState(false)).to.be.revertedWith(
+      await expect(crowdfunding.connect(investor).changeProjectState('paused')).to.be.revertedWith(
         'You need to be the owner of the project'
       );
+    });
+
+    it('Change project state Event', async function () {
+      await expect(crowdfunding.changeProjectState('closed'))
+        .to.emit(crowdfunding, 'ProjectStateChanged')
+        .withArgs('closed');
     });
   });
 });

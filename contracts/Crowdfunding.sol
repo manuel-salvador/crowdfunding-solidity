@@ -7,7 +7,7 @@ contract Crowdfunding {
     string public projectDescription;
     uint256 public goal;
     uint256 public totalFunded;
-    bool public isActive;
+    string public state;
     address payable public projectOwner;
 
     constructor(
@@ -19,7 +19,7 @@ contract Crowdfunding {
         projectDescription = _projectDescription;
         goal = _goal;
         totalFunded = 0;
-        isActive = true;
+        state = "open";
         projectOwner = payable(msg.sender);
     }
 
@@ -39,8 +39,11 @@ contract Crowdfunding {
         _;
     }
 
+    event ProjectFunded(address investor, uint256 amount);
+
+    event ProjectStateChanged(string newState);
+
     function fundProject() public payable notOwner {
-        require(isActive, "The project is no longer funded");
         require(msg.value > 0, "You have to send something");
         require(totalFunded < goal, "Goal already achieved!");
         require(
@@ -48,10 +51,13 @@ contract Crowdfunding {
             "Amount exceeded, please check viewRemaining"
         );
         totalFunded += msg.value;
+
+        emit ProjectFunded(msg.sender, msg.value);
     }
 
-    function changeProjectState(bool _newState) public onlyOwner {
-        isActive = _newState;
+    function changeProjectState(string calldata _newState) public onlyOwner {
+        state = _newState;
+        emit ProjectStateChanged(_newState);
     }
 
     function viewRemaining() public view returns (uint256) {
