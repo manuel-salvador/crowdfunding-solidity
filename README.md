@@ -6,4 +6,4 @@ In progress
 
 ## Challenges:
 
-[x] Create a contract with states, fundProject function and changeProjectState function
+- [x] #1 Create a contract with states, fundProject function and changeProjectState function
