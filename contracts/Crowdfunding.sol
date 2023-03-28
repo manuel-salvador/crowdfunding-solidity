@@ -3,7 +3,7 @@
 pragma solidity ^0.8.9;
 
 contract Crowdfunding {
-    enum State {
+    enum ProjectState {
         Inactive,
         Active,
         Paused
@@ -14,7 +14,7 @@ contract Crowdfunding {
         string description;
         uint256 goal;
         uint256 totalFunded;
-        State state;
+        ProjectState state;
         address payable owner;
     }
 
@@ -30,7 +30,7 @@ contract Crowdfunding {
             _projectDescription,
             _goal,
             0,
-            State.Active,
+            ProjectState.Active,
             payable(msg.sender)
         );
     }
@@ -53,7 +53,7 @@ contract Crowdfunding {
 
     event ProjectFunded(address investor, uint256 amount);
 
-    event ProjectStateChanged(address owner, State newState);
+    event ProjectStateChanged(address owner, ProjectState newState);
 
     function fundProject() public payable notOwner {
         require(msg.value > 0, "You have to send something");
@@ -63,7 +63,7 @@ contract Crowdfunding {
             "Amount exceeded, please check viewRemaining"
         );
         require(
-            project.state == State.Active,
+            project.state == ProjectState.Active,
             "Can't found, the project is not active"
         );
         project.totalFunded += msg.value;
@@ -71,7 +71,7 @@ contract Crowdfunding {
         emit ProjectFunded(msg.sender, msg.value);
     }
 
-    function changeProjectState(State _newState) public onlyOwner {
+    function changeProjectState(ProjectState _newState) public onlyOwner {
         require(
             project.state != _newState,
             "Can't change state with same value"
@@ -89,7 +89,7 @@ contract Crowdfunding {
         return project.totalFunded;
     }
 
-    function getState() public view returns (State) {
+    function getState() public view returns (ProjectState) {
         return project.state;
     }
 }
