@@ -3,29 +3,41 @@
 pragma solidity ^0.8.9;
 
 contract Crowdfunding {
-    string public projectName;
-    string public projectDescription;
-    uint256 public goal;
-    uint256 public totalFunded;
-    uint256 public state;
-    address payable public projectOwner;
+    enum State {
+        Inactive,
+        Active,
+        Paused
+    }
+
+    struct Project {
+        string name;
+        string description;
+        uint256 goal;
+        uint256 totalFunded;
+        State state;
+        address payable owner;
+    }
+
+    Project public project;
 
     constructor(
         string memory _projectName,
         string memory _projectDescription,
         uint256 _goal
     ) {
-        projectName = _projectName;
-        projectDescription = _projectDescription;
-        goal = _goal;
-        totalFunded = 0;
-        state = 1;
-        projectOwner = payable(msg.sender);
+        project = Project(
+            _projectName,
+            _projectDescription,
+            _goal,
+            0,
+            State.Active,
+            payable(msg.sender)
+        );
     }
 
     modifier onlyOwner() {
         require(
-            msg.sender == projectOwner,
+            msg.sender == project.owner,
             "You need to be the owner of the project"
         );
         _;
@@ -33,7 +45,7 @@ contract Crowdfunding {
 
     modifier notOwner() {
         require(
-            msg.sender != projectOwner,
+            msg.sender != project.owner,
             "You can not fund your own project"
         );
         _;
@@ -41,28 +53,43 @@ contract Crowdfunding {
 
     event ProjectFunded(address investor, uint256 amount);
 
-    event ProjectStateChanged(address owner, uint256 newState);
+    event ProjectStateChanged(address owner, State newState);
 
     function fundProject() public payable notOwner {
         require(msg.value > 0, "You have to send something");
-        require(totalFunded < goal, "Goal already achieved!");
+        require(project.totalFunded < project.goal, "Goal already achieved!");
         require(
-            msg.value <= goal - totalFunded,
+            msg.value <= project.goal - project.totalFunded,
             "Amount exceeded, please check viewRemaining"
         );
-        require(state == 1, "Can't found, the project is not active");
-        totalFunded += msg.value;
+        require(
+            project.state == State.Active,
+            "Can't found, the project is not active"
+        );
+        project.totalFunded += msg.value;
 
         emit ProjectFunded(msg.sender, msg.value);
     }
 
-    function changeProjectState(uint256 _newState) public onlyOwner {
-        require(state != _newState, "Can't change state with same value");
-        state = 0;
+    function changeProjectState(State _newState) public onlyOwner {
+        require(
+            project.state != _newState,
+            "Can't change state with same value"
+        );
+        project.state = _newState;
         emit ProjectStateChanged(msg.sender, _newState);
     }
 
     function viewRemaining() public view returns (uint256) {
-        return goal - totalFunded;
+        return project.goal - project.totalFunded;
+    }
+
+    // Gettters
+    function getTotalFunded() public view returns (uint256) {
+        return project.totalFunded;
+    }
+
+    function getState() public view returns (State) {
+        return project.state;
     }
 }

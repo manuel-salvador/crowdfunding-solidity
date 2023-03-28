@@ -19,12 +19,12 @@ describe('Crowdfunding', async function () {
   describe('Fund project function', async function () {
     it('Fund project with 1 ETH', async function () {
       // Parse ether units to wei
-      const amount = ethers.utils.parseUnits('1', 'ether');
+      const amount = ethers.utils.parseEther('1');
       // Inverstor send 1 ETH
       await crowdfunding.connect(investor).fundProject({ value: amount });
 
       // Get total funded
-      const totalFunded = await crowdfunding.totalFunded();
+      const totalFunded = await crowdfunding.getTotalFunded();
 
       // Verify that totalFunded matches with amount sended
       expect(totalFunded).to.equal(amount);
@@ -93,7 +93,7 @@ describe('Crowdfunding', async function () {
     it('Change project state to closed(0)', async function () {
       await crowdfunding.changeProjectState(0);
 
-      const projectState = await crowdfunding.state();
+      const projectState = await crowdfunding.getState();
 
       expect(projectState).to.equal(0);
     });
