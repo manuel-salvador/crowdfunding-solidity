@@ -9,7 +9,13 @@ contract Crowdfunding {
         Paused
     }
 
+    struct Investment {
+        address investor;
+        uint256 value;
+    }
+
     struct Project {
+        string id;
         string name;
         string description;
         uint256 goal;
@@ -18,14 +24,43 @@ contract Crowdfunding {
         address payable owner;
     }
 
-    Project public project;
+    Project[] public projects;
 
-    constructor(
-        string memory _projectName,
-        string memory _projectDescription,
+    mapping(string projectId => Investment[]) public investments;
+
+    modifier onlyOwner(uint256 projectIndex) {
+        require(
+            msg.sender == projects[projectIndex].owner,
+            "You need to be the owner of the project"
+        );
+        _;
+    }
+
+    modifier notOwner(uint256 projectIndex) {
+        require(
+            msg.sender != projects[projectIndex].owner,
+            "You can not fund your own project"
+        );
+        _;
+    }
+
+    event ProjectFunded(string projectId, address investor, uint256 amount);
+
+    event ProjectStateChanged(
+        string projectId,
+        address owner,
+        ProjectState newState
+    );
+
+    function createProject(
+        string calldata _id,
+        string calldata _projectName,
+        string calldata _projectDescription,
         uint256 _goal
-    ) {
-        project = Project(
+    ) public {
+        require(_goal > 0, "Goal must be greater than 0");
+        Project memory newProject = Project(
+            _id,
             _projectName,
             _projectDescription,
             _goal,
@@ -33,29 +68,14 @@ contract Crowdfunding {
             ProjectState.Active,
             payable(msg.sender)
         );
+        projects.push(newProject);
     }
 
-    modifier onlyOwner() {
-        require(
-            msg.sender == project.owner,
-            "You need to be the owner of the project"
-        );
-        _;
-    }
+    function fundProject(
+        uint256 _projectIndex
+    ) public payable notOwner(_projectIndex) {
+        Project memory project = projects[_projectIndex];
 
-    modifier notOwner() {
-        require(
-            msg.sender != project.owner,
-            "You can not fund your own project"
-        );
-        _;
-    }
-
-    event ProjectFunded(address investor, uint256 amount);
-
-    event ProjectStateChanged(address owner, ProjectState newState);
-
-    function fundProject() public payable notOwner {
         require(msg.value > 0, "You have to send something");
         require(project.totalFunded < project.goal, "Goal already achieved!");
         require(
@@ -66,30 +86,48 @@ contract Crowdfunding {
             project.state == ProjectState.Active,
             "Can't found, the project is not active"
         );
-        project.totalFunded += msg.value;
 
-        emit ProjectFunded(msg.sender, msg.value);
+        projects[_projectIndex].totalFunded += msg.value;
+
+        investments[project.id].push(Investment(msg.sender, msg.value));
+
+        emit ProjectFunded(project.id, msg.sender, msg.value);
     }
 
-    function changeProjectState(ProjectState _newState) public onlyOwner {
+    function changeProjectState(
+        uint256 _projectIndex,
+        ProjectState _newState
+    ) public onlyOwner(_projectIndex) {
+        Project memory project = projects[_projectIndex];
         require(
             project.state != _newState,
             "Can't change state with same value"
         );
-        project.state = _newState;
-        emit ProjectStateChanged(msg.sender, _newState);
+        projects[_projectIndex].state = _newState;
+        emit ProjectStateChanged(project.id, msg.sender, _newState);
     }
 
-    function viewRemaining() public view returns (uint256) {
+    function viewRemaining(
+        uint256 _projectIndex
+    ) public view returns (uint256) {
+        Project memory project = projects[_projectIndex];
         return project.goal - project.totalFunded;
     }
 
     // Gettters
-    function getTotalFunded() public view returns (uint256) {
-        return project.totalFunded;
+    function getTotalFunded(
+        uint256 _projectIndex
+    ) public view returns (uint256) {
+        return projects[_projectIndex].totalFunded;
     }
 
-    function getState() public view returns (ProjectState) {
-        return project.state;
+    function getState(
+        uint256 _projectIndex
+    ) public view returns (ProjectState) {
+        return projects[_projectIndex].state;
+    }
+
+    function getAllProjects() public view returns (Project[] memory) {
+        return projects;
     }
 }

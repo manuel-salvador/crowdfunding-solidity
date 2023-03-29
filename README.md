@@ -17,3 +17,15 @@ In progress
   - [x] Can't fund project with 0 ETH
 - [x] #5 Structs: save all info un a Struct, update functions to use created Struct
 - [x] #6 Enums: add enums to avoid to create new states
+- [x] #7 Arrays y Mapping:
+  - [x] Allows projects to be stored in an array
+  - [x] Create the "createProject" function where the project data can be initialized
+  - [x] Create a mapping that stores contributions to projects
+
+---
+
+Planned:
+
+- dueDate on projects.
+- withdrawFunds function: This feature would allow the project owner to withdraw the funds raised once the funding goal has been reached.
+- refundInvestors function: This feature will allow investors to withdraw their funds if the project does not reach its funding target.
